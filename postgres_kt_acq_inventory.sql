@@ -17,7 +17,7 @@ CREATE TABLE kitchen_talk.acq_inventory
     employee_last_name VARCHAR(40),
     employee_dt_assignment TIMESTAMP WITH TIME ZONE,
     dt_admission TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-	dt_egress TIMESTAMP WITH TIME ZONE,
+    dt_egress TIMESTAMP WITH TIME ZONE,
     enable boolean DEFAULT true NOT NULL
 );
 

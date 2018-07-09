@@ -2,7 +2,7 @@ package cl.gd.kt.acqt.verticle;
 
 import cl.gd.kt.acqt.service.InventoryService;
 import cl.gd.kt.acqt.verticle.api.InventoryApiVerticle;
-import cl.gd.kt.acqt.verticle.event.ListenerEvent;
+import cl.gd.kt.acqt.verticle.event.EmployeeListenerEvent;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
@@ -76,7 +76,7 @@ public class AcquisitionVerticle extends RestApiVerticle {
 		vertx.deployVerticle(new InventoryApiVerticle(router, this.inventoryService), this.svrOptsUltHg);
 		
 		//Event
-		vertx.deployVerticle(new ListenerEvent());
+		vertx.deployVerticle(new EmployeeListenerEvent(this.inventoryService));
 	}
 
 	/**
@@ -86,6 +86,7 @@ public class AcquisitionVerticle extends RestApiVerticle {
 	 * @param port http port
 	 * @return async result of the procedure
 	 */
+	@Override
 	protected Future<Void> createHttpServer(Router router, int port) {
 		Future<HttpServer> httpServerFuture = Future.future();
 		vertx.createHttpServer().requestHandler(router::accept).listen(port, httpServerFuture.completer());

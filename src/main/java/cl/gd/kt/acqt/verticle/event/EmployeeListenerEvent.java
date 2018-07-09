@@ -1,5 +1,8 @@
 package cl.gd.kt.acqt.verticle.event;
 
+import cl.gd.kt.acqt.service.InventoryService;
+import cl.gd.kt.acqt.util.AppEnum;
+import cl.gd.kt.acqt.util.SystemUtil;
 import cl.gd.kt.acqt.verticle.RestApiVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
@@ -14,30 +17,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmployeeListenerEvent extends RestApiVerticle {
 	
-
 	private volatile Handler<BridgeEvent> eventHandler = event -> event.complete(true);
+	private InventoryService inventoryService;
+	
+	public EmployeeListenerEvent (InventoryService inventoryService) {
+		//services
+		this.inventoryService = inventoryService;	
+	}
 	
 	@Override
 	public void start() {
-		log.info("Beginning kt-acquisitions...");
+		log.info("Beginning EmployeeListenerEvent kt-acquisitions...");
+		final int appPort = SystemUtil.getEnvironmentIntValue(AppEnum.EVENT_PORT_ACQUISITIONS.name());
+		String eventEmployee = SystemUtil.getEnvironmentStrValue(AppEnum.EVENT_EMPLOYEE.name());
 		
-	    vertx.eventBus().consumer("test", (Message<JsonObject> msg) -> {
-	        	log.info("LLEGO");
-	        	log.info("msg: "+msg);
-	      });
+	    vertx.eventBus().consumer(eventEmployee, (Message<JsonObject> msg) -> {
+	        	JsonObject jsObj = JsonObject.mapFrom(msg.body());
+	        	log.info("Message received: "+jsObj);
+	        	this.inventoryService.logicEventEmployee(jsObj);
+	    });
 	    
-	    TcpEventBusBridge bridge = TcpEventBusBridge.create(vertx, 
-	    		new BridgeOptions()
-	    		/*.addInboundPermitted(new PermittedOptions().setAddress("hello"))
-	            .addInboundPermitted(new PermittedOptions().setAddress("echo"))*/
-	            .addInboundPermitted(new PermittedOptions().setAddress("test"))
-	            /*.addOutboundPermitted(new PermittedOptions().setAddress("echo"))
-	            .addOutboundPermitted(new PermittedOptions().setAddress("ping"))*/, 
-	            new NetServerOptions(), event -> eventHandler.handle(event));
+	    TcpEventBusBridge bridge = TcpEventBusBridge.create(vertx, new BridgeOptions()
+	    		.addInboundPermitted(new PermittedOptions().setAddress(eventEmployee)), 
+	    		new NetServerOptions(), event -> eventHandler.handle(event));
 
-	    bridge.listen(7002, res -> {
-	    	log.info("kt-acquisitions: 7002: "+res.succeeded());
-	    	log.info("result: "+res.result());
+	    bridge.listen(appPort, res -> {
+	    	log.info("kt-acquisitions listener port: "+appPort+" : "+res.succeeded());
+	    	log.info("result: "+res.succeeded());
 	    });
 	}
 }
